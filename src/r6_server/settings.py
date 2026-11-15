@@ -4,10 +4,10 @@ import glob
 import os
 import re
 
+from r6_server import paths
 from r6_server.servers import DEFAULT_CODE
 
-BASE_DIR = os.path.join(os.path.expanduser("~"), "Documents", "My Games", "Rainbow Six - Siege")
-INI_NAME = "GameSettings.ini"
+INI_NAME = paths.INI_NAME
 SECTION = "[ONLINE]"
 
 _HINT_RE = re.compile(r"^\s*DataCenterHint\s*=(.*)$")
@@ -15,8 +15,9 @@ _HINT_RE = re.compile(r"^\s*DataCenterHint\s*=(.*)$")
 _COMMENT_CODE_RE = re.compile(r"^\s*;\s*((?:gamelift|playfab)/[A-Za-z0-9-]+)\s*$")
 
 
-def find_ini_files(base_dir=BASE_DIR):
-    """계정(UUID 폴더)별 GameSettings.ini 경로 목록."""
+def find_ini_files(base_dir=None):
+    """계정(UUID 폴더)별 GameSettings.ini 경로 목록. base_dir 생략 시 자동 탐색."""
+    base_dir = base_dir or paths.get_base_dir()
     if not os.path.isdir(base_dir):
         return []
     return sorted(glob.glob(os.path.join(base_dir, "*", INI_NAME)))
@@ -37,7 +38,7 @@ def read_hint(path):
     return DEFAULT_CODE
 
 
-def current_code(base_dir=BASE_DIR):
+def current_code(base_dir=None):
     """가장 최근에 수정된 ini 의 값. ini 가 없거나 못 읽으면 None."""
     files = find_ini_files(base_dir)
     if not files:
@@ -49,7 +50,7 @@ def current_code(base_dir=BASE_DIR):
         return None
 
 
-def parse_hint_codes(base_dir=BASE_DIR):
+def parse_hint_codes(base_dir=None):
     """ini 주석에 게임이 적어 둔 서버 코드 목록 (순서 유지, 중복 제거)."""
     codes = []
     for path in find_ini_files(base_dir):
@@ -100,7 +101,7 @@ def write_hint(path, code):
             f.write(new_text)
 
 
-def apply_to_all(code, base_dir=BASE_DIR):
+def apply_to_all(code, base_dir=None):
     """모든 계정 ini 에 적용. 적용한 파일 수를 돌려준다. 실패 시 OSError."""
     files = find_ini_files(base_dir)
     for path in files:
